@@ -51,22 +51,30 @@ def evaluate_population(population):
 # Evolution loop
 print("Starting evolution...")
 for i in tqdm(range(num_generations)):
-    # Elitism
+    # Evaluate fitness of population
+    fitness_values = evaluate_population(pop)
+
+    # Select elites from population
     elites = sorted(zip(pop, fitness_values), key=lambda x: x[1], reverse=True)[:elitism]
-    offspring = [elite[0] for elite in elites]
-    
-    # Selection
-    if selection == 'roulette':
-        total_fitness = sum(fitness_values)
-        parent_probs = [f/total_fitness for f in fitness_values]
-        parents = [pop[i] for i in range(pop_size) if random.random() < parent_probs[i]]
-    elif selection == 'tournament':
-        parents = []
-        for j in range(pop_size-elitism):
-            tournament = random.sample(list(enumerate(pop)), tournament_size)
-            tournament_fitness = [fitness_values[k] for k, _ in tournament]
-            winner = tournament[tournament_fitness.index(max(tournament_fitness))][1]
-            parents.append(winner)
+
+    # Select parents for mating
+    parents = selection(pop, fitness_values, num_parents)
+
+    # Create offspring via crossover and mutation
+    offspring = crossover(parents, pop_size - elitism)
+    offspring = mutation(offspring, mutation_rate, mutation_scale)
+
+    # Evaluate fitness of offspring
+    offspring_fitness = evaluate_population(offspring)
+
+    # Merge parents and offspring
+    pop = elites + offspring
+    fitness_values = [elite[1] for elite in elites] + offspring_fitness
+
+    # Print best individual in population
+    best_ind = max(pop, key=fitness)
+    tqdm.write("Best individual in generation {}: {:.4f} (fitness = {:.4f})".format(i+1, best_ind, fitness(best_ind)))
+
     
     # Crossover
     for j in range(0, len(parents)-1, 2):

@@ -89,21 +89,21 @@ for i in tqdm(range(num_generations)):
                 offspring += [child1, child2]
     
     # Mutation
-    if adaptive_mutation:
+if adaptive_mutation:
     avg_fitness = sum(fitness_values) / pop_size
     stddev_fitness = (sum((f-avg_fitness)**2 for f in fitness_values) / pop_size)**0.5
     if stddev_fitness > adaptive_mutation_threshold * avg_fitness:
         mutation_rate = max(0, mutation_rate - adaptive_mutation_step)
     else:
         mutation_rate = min(1, mutation_rate + adaptive_mutation_step)
-
-for j in range(len(offspring)):
-    if random.random() < mutation_rate:
-        if mutation == 'random_reset':
-            offspring[j] = random.uniform(-10, 10)
-        elif mutation == 'gaussian':
-            offspring[j] += random.gauss(0, mutation_scale)
-            offspring[j] = max(-10, min(10, offspring[j]))
+    
+    for j in range(len(offspring)):
+        if random.random() < mutation_rate:
+            if mutation == 'random_reset':
+                offspring[j] = random.uniform(-10, 10)
+            elif mutation == 'gaussian':
+                offspring[j] += random.gauss(0, mutation_scale)
+                offspring[j] = max(-10, min(10, offspring[j]))
 
     # Evaluate fitness of offspring
     offspring_fitness = evaluate_population(offspring)

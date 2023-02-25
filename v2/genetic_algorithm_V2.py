@@ -44,10 +44,9 @@ pop = initialize_population(pop_size, initialization)
 
 # Evaluate fitness of population
 def evaluate_population(population):
-    with Pool(num_cpus) as p:
-        return p.map(fitness, population)
-
-fitness_values = evaluate_population(pop)
+    with multiprocessing.Pool() as p:
+        fitness_values = p.map(fitness, population)
+    return fitness_values
 
 # Evolution loop
 print("Starting evolution...")

@@ -240,8 +240,8 @@ while not game_over:
     pygame.draw.rect(screen, food_color, (food_x*20, food_y*20, 20, 20))
     pygame.display.update()
    
-    # Delay for 200 milliseconds
-    pygame.time.delay(200)
+    # Delay for 500 milliseconds
+    pygame.time.delay(500)
    
     # Check if the game is over
     if game_over:

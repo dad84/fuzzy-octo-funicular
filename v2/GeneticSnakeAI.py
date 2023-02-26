@@ -206,13 +206,18 @@ while not game_over:
     
     # Check if the Snake has collided with the walls or its own body
     if snake_x < 0 or snake_x >= board_width or snake_y < 0 or snake_y >= board_height:
+        # Snake has crashed into the wall
+        print("Snake has crashed into the wall!")
         game_over = True
     for segment in snake_list[:-1]:
         if segment == (snake_x, snake_y):
+            # Snake has crashed into itself
+            print("Snake has crashed into itself!")
             game_over = True
     
     # Check if the Snake has eaten the food
     if snake_x == food_x and snake_y == food_y:
+        print("Snake has eaten the food!", flush=True)
         score += 1
         snake_length += 1
         food_x, food_y = random.randint(0, board_width-1), random.randint(0, board_height-1)
@@ -234,7 +239,10 @@ while not game_over:
         pygame.draw.rect(screen, snake_color, (segment[0]*20, segment[1]*20, 20, 20))
     pygame.draw.rect(screen, food_color, (food_x*20, food_y*20, 20, 20))
     pygame.display.update()
-    
+   
+    # Delay for 200 milliseconds
+    pygame.time.delay(200)
+   
     # Check if the game is over
     if game_over:
         break

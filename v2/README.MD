@@ -1,3 +1,6 @@
+![snakeGA](insert-image-address-here)
+
+
 At a high level, the code defines a fitness function to evaluate the performance of each Snake game-playing agent, a selection function to choose the most fit individuals to reproduce, a crossover function to combine the genetic material of two parents to create offspring, and a mutation function to introduce random changes in the genetic material of the offspring. The genetic algorithm is run for a fixed number of generations, with the best-performing individuals from each generation being used to produce the next generation of offspring.
 
 The fitness function calculates the fitness score for each Snake game-playing agent based on how well it performs in a game of Snake. The selection function uses a tournament-style selection process to choose the most fit individuals from the current population to reproduce. The crossover function performs single-point crossover between the genetic material of two parents to produce offspring, and the mutation function introduces random changes in the genetic material of the offspring. The population is then replaced with the offspring, and the process repeats for a fixed number of generations.

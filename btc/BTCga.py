@@ -3,18 +3,18 @@ import requests
 import time
 
 # Define constants
-HISTORICAL_URL = "https://min-api.cryptocompare.com/data/v2/histoday"
-CURRENT_URL = "https://min-api.cryptocompare.com/data/price"
-FSYM = "BTC"
-TSYM = "USD"
-LIMIT = 365
-NUM_WEIGHTS = 7
-POPULATION_SIZE = 5000
-NUM_SETS = 5
-MUTATION_RATE = 0.001
-WAIT_TIME = 30 # seconds
-MAX_ITERATIONS = 100
-BEST_WEIGHTS_FILE = "best_weights.txt"
+HISTORICAL_URL = "https://min-api.cryptocompare.com/data/v2/histoday" # API endpoint for historical price and volume data
+CURRENT_URL = "https://min-api.cryptocompare.com/data/price" # API endpoint for current price data
+FSYM = "BTC" # cryptocurrency to predict (Bitcoin in this case)
+TSYM = "USD" # currency to predict against (US dollars in this case)
+LIMIT = 365 # number of days of historical data to retrieve
+NUM_WEIGHTS = 7 # number of weights to use for prediction
+POPULATION_SIZE = 5000 # size of population of sets of weights
+NUM_SETS = 5 # number of top-performing sets of weights to use for prediction
+MUTATION_RATE = 0.001 # probability of each weight mutating during reproduction
+WAIT_TIME = 30 # time to wait between API calls (in seconds)
+MAX_ITERATIONS = 100 # maximum number of generations to run the algorithm for
+BEST_WEIGHTS_FILE = "best_weights.txt" # filename to save best weights to
 
 def collect_historical_data():
     params = {"fsym": FSYM, "tsym": TSYM, "limit": LIMIT}

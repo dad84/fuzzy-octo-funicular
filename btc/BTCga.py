@@ -17,22 +17,31 @@ MAX_ITERATIONS = 100 # maximum number of generations to run the algorithm for
 BEST_WEIGHTS_FILE = "best_weights.txt" # filename to save best weights to
 
 def collect_historical_data():
+    # Set parameters for API call
     params = {"fsym": FSYM, "tsym": TSYM, "limit": LIMIT}
+    # Make API call and retrieve data
     response = requests.get(HISTORICAL_URL, params=params)
     data = response.json()["Data"]["Data"]
+    # Extract price and volume data from response
     prices = [day["close"] for day in data]
     volumes = [day["volumeto"] for day in data]
+    # Calculate RSI for price data
     rsis = calculate_rsi(prices)
     return prices, volumes, rsis
 
 def calculate_rsi(prices, window_size=14):
+    # Calculate change in price between each day
     deltas = np.diff(prices)
+    # Take first change as seed for calculating average gains and losses
     seed = deltas[:1]
+    # Calculate average gains and losses over window size
     up = deltas[deltas >= 0].sum() / window_size
     down = -deltas[deltas < 0].sum() / window_size
+    # Calculate relative strength and RSI for first day
     rs = up / down
     rsi = 100.0 - (100.0 / (1.0 + rs))
     rsis = [np.nan] * (window_size - 1) + [rsi]
+    # Calculate RSI for remaining days using exponential moving average
     for i in range(window_size, len(prices)):
         delta = deltas[i-1]
         if delta > 0:

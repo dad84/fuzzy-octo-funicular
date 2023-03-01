@@ -6,7 +6,7 @@ This Python script uses a genetic algorithm to predict the future price of Bitco
 
 1. Install the required Python libraries.
 
-2. Run the script using `python3 btc.py`.
+2. Run the script using `python3 BTCag.py`.
 
 3. Wait for the script to finish running. The script will make API requests to CryptoCompare to collect historical price and volume data for Bitcoin, and then use a genetic algorithm to optimize a set of weights that can predict the future price of Bitcoin based on the past 7 days of price data and RSI values.
 

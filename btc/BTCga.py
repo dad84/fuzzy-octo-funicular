@@ -2,123 +2,116 @@ import numpy as np
 import requests
 import time
 
-historical_url = "https://min-api.cryptocompare.com/data/v2/histoday"
-params = {
-    "fsym": "BTC",
-    "tsym": "USD",
-    "limit": 365
-}
-response = requests.get(historical_url, params=params)
-data = response.json()["Data"]["Data"]
+# Define constants
+HISTORICAL_URL = "https://min-api.cryptocompare.com/data/v2/histoday"
+CURRENT_URL = "https://min-api.cryptocompare.com/data/price"
+FSYM = "BTC"
+TSYM = "USD"
+LIMIT = 365
+NUM_WEIGHTS = 7
+POPULATION_SIZE = 5000
+NUM_SETS = 5
+MUTATION_RATE = 0.001
+WAIT_TIME = 30 # seconds
+MAX_ITERATIONS = 100
+BEST_WEIGHTS_FILE = "best_weights.txt"
 
-prices = []
-volumes = []
-rsi = []
-for day in data:
-    timestamp = day["time"]
-    price = day["close"]
-    volume = day["volumeto"]
-    prices.append(price)
-    volumes.append(volume)
+def collect_historical_data():
+    params = {"fsym": FSYM, "tsym": TSYM, "limit": LIMIT}
+    response = requests.get(HISTORICAL_URL, params=params)
+    data = response.json()["Data"]["Data"]
+    prices = [day["close"] for day in data]
+    volumes = [day["volumeto"] for day in data]
+    rsis = calculate_rsi(prices)
+    return prices, volumes, rsis
 
-    if len(prices) > 14:
-        # Calculate RSI for the past 14 days
-        deltas = np.diff(prices[-14:])
-        seed = deltas[:1]
-        up = deltas[deltas >= 0].sum() / 14
-        down = -deltas[deltas < 0].sum() / 14
+def calculate_rsi(prices, window_size=14):
+    deltas = np.diff(prices)
+    seed = deltas[:1]
+    up = deltas[deltas >= 0].sum() / window_size
+    down = -deltas[deltas < 0].sum() / window_size
+    rs = up / down
+    rsi = 100.0 - (100.0 / (1.0 + rs))
+    rsis = [np.nan] * (window_size - 1) + [rsi]
+    for i in range(window_size, len(prices)):
+        delta = deltas[i-1]
+        if delta > 0:
+            upval = delta
+            downval = 0
+        else:
+            upval = 0
+            downval = -delta
+        up = (up * (window_size - 1) + upval) / window_size
+        down = (down * (window_size - 1) + downval) / window_size
         rs = up / down
-        rsi.append(100.0 - (100.0 / (1.0 + rs)))
-    else:
-        rsi.append(np.nan)
+        rsi = 100.0 - (100.0 / (1.0 + rs))
+        rsis.append(rsi)
+    return rsis
 
-print("Historical data collected")
-
-
-def fitness_function(weights, rsi):
+def evaluate_weights(weights, prices, rsis):
     weights = np.array(weights) / np.sum(weights)
-    prediction = np.dot(prices[-7:], weights)
+    prediction = np.dot(prices[-NUM_WEIGHTS:], weights)
     actual = prices[-1]
-    rsi_value = rsi[-1]
-    fitness = 1 / abs(prediction - actual) * rsi_value
+    rsi = rsis[-1]
+    fitness = 1 / abs(prediction - actual) * rsi
     return fitness
 
-population_size = 500
-num_weights = 7
-mutation_rate = 0.01
-num_sets = 5
-
-population = np.random.rand(population_size, num_weights + 1)
-fitness_scores = np.zeros(population_size)
-
-best_fitness = 0
-best_weights = None
-
-counter = 0
-
-while True:
-    for i in range(population_size):
-        fitness_scores[i] = fitness_function(population[i, :-1], rsi)
+def select_top_weights(population, fitness_scores, num_sets):
     top_indices = np.argsort(fitness_scores)[-num_sets:]
     top_weights = population[top_indices, :-1]
-    predictions = np.zeros(num_sets)
-    for i in range(num_sets):
-        predictions[i] = np.dot(prices[-7:], top_weights[i])
-    current_url = "https://min-api.cryptocompare.com/data/price"
-    params = {
-        "fsym": "BTC",
-        "tsyms": "USD"
-    }
-    response = requests.get(current_url, params=params)
+    return top_weights
+
+def predict_future_price(prices, top_weights):
+    predictions = np.dot(prices[-NUM_WEIGHTS:], top_weights.T)
+    response = requests.get(CURRENT_URL, params={"fsym": FSYM, "tsyms": TSYM})
     if response.status_code == 200:
-        current_data = response.json()
-        if "USD" in current_data:
-            current_price = current_data["USD"]
-            current_volume = volumes[-1]
-            future_price = np.mean(predictions) * (current_price / prices[-1])
-            if np.max(fitness_scores) > best_fitness:
-                best_fitness = np.max(fitness_scores)
-                best_weights = population[np.argmax(fitness_scores), :-1]
-                print("New best weights found! Fitness score:", best_fitness)
-        else:
-            raise ValueError("Error: no USD data found in API response.")
+        current_price = response.json().get(TSYM, np.nan)
     else:
-        print("Error: API request failed.")
-        continue
-    counter += 1
-    if counter > 100:
-        break
-    time.sleep(30)
+        current_price = np.nan
     current_volume = volumes[-1]
     future_price = np.mean(predictions) * (current_price / prices[-1])
-    if np.max(fitness_scores) > best_fitness:
-        best_fitness = np.max(fitness_scores)
-        best_weights = population[np.argmax(fitness_scores), :-1]
-    new_population = np.zeros((population_size, num_weights + 1))
-    for i in range(population_size):
-        parent_indices = np.random.choice(population_size, size=2, replace=False)
+    return future_price, current_price, current_volume
+    
+def generate_new_population(population, fitness_scores):
+    new_population = np.zeros((POPULATION_SIZE, NUM_WEIGHTS + 1))
+    for i in range(POPULATION_SIZE):
+        parent_indices = np.random.choice(POPULATION_SIZE, size=2, replace=False)
         if fitness_scores[parent_indices[0]] > fitness_scores[parent_indices[1]]:
             parent = population[parent_indices[0]]
         else:
             parent = population[parent_indices[1]]
-        mutation_mask = np.random.rand(num_weights) < mutation_rate
-        mutation_amounts = np.random.normal(size=num_weights)
+        mutation_mask = np.random.rand(NUM_WEIGHTS) < MUTATION_RATE
+        mutation_amounts = np.random.normal(size=NUM_WEIGHTS)
         child = parent[:-1] + mutation_mask * mutation_amounts
         new_population[i, :-1] = child
-        new_population[i, -1] = rsi[-1]
+        new_population[i, -1] = rsis[-1]
+    return new_population
+
+# Main program
+prices, volumes, rsis = collect_historical_data()
+
+population = np.random.rand(POPULATION_SIZE, NUM_WEIGHTS + 1)
+fitness_scores = np.zeros(POPULATION_SIZE)
+
+best_fitness = 0
+best_weights = None
+
+for i in range(MAX_ITERATIONS):
+    for j in range(POPULATION_SIZE):
+        fitness_scores[j] = evaluate_weights(population[j, :-1], prices, rsis)
+    top_weights = select_top_weights(population, fitness_scores, NUM_SETS)
+    future_price, current_price, current_volume = predict_future_price(prices, top_weights)
+    if np.max(fitness_scores) > best_fitness:
+        best_fitness = np.max(fitness_scores)
+        best_weights = population[np.argmax(fitness_scores), :-1]
+        print(f"New best weights found! Fitness score: {best_fitness}")
+        np.savetxt(BEST_WEIGHTS_FILE, best_weights)
+        print("Best weights saved to file.")
+    new_population = generate_new_population(population, fitness_scores)
     population = new_population
+    rsis = rsis[1:] + [rsis[-1]]
+    prices = prices[1:] + [future_price]
+    volumes = volumes[1:] + [current_volume]
+    print(f"Iteration {i+1}: current price={current_price:.2f}, predicted future price={future_price:.2f}")
+    time.sleep(WAIT_TIME)
     
-    print("Current market data collected")
-    print("Current price:", current_price)
-    print("Current volume:", current_volume)
-    print("Predicted future price:", future_price)
-    
-if np.max(fitness_scores) > best_fitness:
-    best_fitness = np.max(fitness_scores)
-    best_weights = population[np.argmax(fitness_scores), :-1]
-    print("New best weights found! Fitness score:", best_fitness)
-save_result = np.savetxt("best_weights.txt", best_weights)
-if save_result is None:
-    print("Best weights saved to file.")
-else:
-    print("Error saving best weights to file:", save_result)

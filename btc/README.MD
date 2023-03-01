@@ -1,29 +1,53 @@
-# Genetic Algorithm for Bitcoin Price Prediction
+# Real-time Trading Strategy Optimization
 
-This Python script uses a genetic algorithm to predict the future price of Bitcoin based on historical price data and relative strength index (RSI) values. 
+This Python program uses a real-time trading strategy optimization algorithm to identify the best weights for a given set of market data.
 
-## Usage
+## Prerequisites
 
-1. Install the required Python libraries.
+This program requires the following packages to be installed:
 
-2. Run the script using `python3 BTCag.py`.
+- `numpy`
+- `websocket-client`
 
-3. Wait for the script to finish running. The script will make API requests to CryptoCompare to collect historical price and volume data for Bitcoin, and then use a genetic algorithm to optimize a set of weights that can predict the future price of Bitcoin based on the past 7 days of price data and RSI values.
+## How to Run
 
-4. The script will output the current market data, including the current price and volume of Bitcoin, as well as the predicted future price based on the optimized weights.
+1. Clone this repository to your local machine.
+2. Install the required packages listed above.
+3. Run the script using `BTCga.py`.
+4. The script will begin to stream market data from the Binance WebSocket API and optimize the trading strategy in real-time.
 
-5. Once the script has finished running, it will save the best weights to a text file called `best_weights.txt`.
+## Overview
 
-## How It Works
+This program uses the Binance WebSocket API to stream real-time market data for BTCUSDT. It calculates the Relative Strength Index (RSI) for the past 14 days and uses a genetic algorithm to optimize a trading strategy that predicts future prices.
 
-1. The script first retrieves 365 days of daily price and volume data for Bitcoin from the CryptoCompare API using the requests library.
+The program generates a population of 500 sets of weights, with 7 weights in each set. It then evaluates the fitness of each set of weights by calculating a score based on how closely the predicted price matches the actual price and the RSI value at the time of prediction. The program then selects the top 5 sets of weights with the highest fitness scores and uses them to make predictions for the future price.
 
-2. It then calculates the RSI for each day using the previous 14 days of closing prices.
+The program saves the best set of weights found so far to a file called `best_weights.txt`. The program also prints out the current market data, including the current price, current volume, and predicted future price.
 
-3. The fitness function takes in a set of weights (7 in total) and the RSI values, and returns a fitness score based on how well the weighted average of the last 7 days of prices predicts the next day's price, multiplied by the RSI value for the current day.
+The program continues to run indefinitely, optimizing the trading strategy in real-time as new market data becomes available. It will stop after 100 iterations.
 
-4. The genetic algorithm then iterates over a fixed number of generations, with each generation consisting of creating a new population of weights based on the previous generation's fitness scores and randomly selecting parents from the population to create children with slight mutations. 
+## Sample Output
 
-5. The top-performing weights from each generation are then used to make predictions for the future price of Bitcoin, and if the current fitness score is higher than the previous best score, the weights are updated as the new best weights.
+Here is an example of what the program output might look like:
 
-6. Finally, the script saves the best weights to a text file.
+```
+Current market data collected
+Current price: 58000.00
+Current volume: 5.6342
+Predicted future price: 58200.00
+Best weights saved to file.
+```
+
+## How it Works
+
+The program uses a WebSocket connection to stream real-time market data from the Binance API. It calculates the RSI for the past 14 days based on the price data received from the API. It then generates a population of 500 sets of weights, each with 7 weights.
+
+The program evaluates the fitness of each set of weights by calculating a score based on how closely the predicted price matches the actual price and the RSI value at the time of prediction. The program then selects the top 5 sets of weights with the highest fitness scores and uses them to make predictions for the future price.
+
+The program saves the best set of weights found so far to a file called `best_weights.txt`. The program also prints out the current market data, including the current price, current volume, and predicted future price.
+
+The program continues to run indefinitely, optimizing the trading strategy in real-time as new market data becomes available. It will stop after 100 iterations.
+
+## Credits
+
+This program was written by dad84 and is licensed under the [MIT License](https://opensource.org/licenses/MIT).

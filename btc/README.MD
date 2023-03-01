@@ -31,11 +31,9 @@ The program continues to run indefinitely, optimizing the trading strategy in re
 Here is an example of what the program output might look like:
 
 ```
-Current market data collected
-Current price: 58000.00
-Current volume: 5.6342
-Predicted future price: 58200.00
+New best weights found! Fitness score: 188.03534070514598
 Best weights saved to file.
+Iteration 10: current price=23562.96, predicted future price=23629.68
 ```
 
 ## How it Works

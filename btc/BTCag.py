@@ -37,6 +37,7 @@ def fitness_function(weights):
 population_size = 50
 num_weights = 7
 mutation_rate = 0.1
+num_sets = 5 # Number of sets of weights to use for ensemble
 
 population = np.random.rand(population_size, num_weights)
 fitness_scores = np.zeros(population_size)
@@ -48,11 +49,36 @@ while True:
     # Evaluate fitness for each individual in the population
     for i in range(population_size):
         fitness_scores[i] = fitness_function(population[i])
-    # Find the best individual in the population
-    best_index = np.argmax(fitness_scores)
-    if fitness_scores[best_index] > best_fitness:
-        best_fitness = fitness_scores[best_index]
-        best_weights = population[best_index]
+    # Find the top n individuals in the population
+    top_indices = np.argsort(fitness_scores)[-num_sets:]
+    top_weights = population[top_indices]
+    # Use ensemble methods to predict future prices
+    predictions = np.zeros(num_sets)
+    for i in range(num_sets):
+        predictions[i] = np.dot(prices[-7:], top_weights[i])
+    # Gather current market data from CryptoCompare API
+    current_url = "https://min-api.cryptocompare.com/data/price"
+    params = {
+        "fsym": "BTC",
+        "tsyms": "USD"
+    }
+    response = requests.get(current_url, params=params)
+    if response.status_code == 200:
+        current_data = response.json()
+        if "USD" in current_data:
+            current_price = current_data["USD"]
+        else:
+            print("Error: no USD data found in API response.")
+            continue
+    else:
+        print("Error: API request failed.")
+        continue
+    current_volume = volumes[-1]  # We can use the last known volume
+    future_price = np.mean(predictions) * (current_price / prices[-1])
+    # Update best fitness and weights
+    if np.max(fitness_scores) > best_fitness:
+        best_fitness = np.max(fitness_scores)
+        best_weights = population[np.argmax(fitness_scores)]
     # Create a new population through selection and mutation
     new_population = np.zeros((population_size, num_weights))
     for i in range(population_size):
@@ -72,20 +98,6 @@ while True:
     # Wait for 30 seconds before updating current market data
     time.sleep(30)
     
-    # Gather current market data from CryptoCompare API
-    current_url = "https://min-api.cryptocompare.com/data/price"
-    params = {
-        "fsym": "BTC",
-        "tsyms": "USD"
-    }
-    response = requests.get(current_url, params=params)
-    current_data = response.json()
-    current_price = current_data["USD"]
-    current_volume = volumes[-1]  # We can use the last known volume
-    
-    # Use best weights to predict future prices
-    prediction = np.dot(prices[-7:], best_weights)
-    future_price = prediction * (current_price / prices[-1])
     print("Current price:", current_price)
     print("Current volume:", current_volume)
     print("Predicted future price:", future_price)

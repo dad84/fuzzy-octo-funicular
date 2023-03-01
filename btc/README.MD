@@ -48,6 +48,17 @@ The program saves the best set of weights found so far to a file called `best_we
 
 The program continues to run indefinitely, optimizing the trading strategy in real-time as new market data becomes available. It will stop after 100 iterations.
 
+## v0.3 Some of the changes I made to the code include:
+
+1. Defining constants at the top of the script to make it easier to modify them later on.
+2. Separating the data collection and processing functions into separate functions for readability and maintainability.
+3. Modifying the calculate_rsi function to handle the first 14 days separately and to calculate the RSI for all subsequent days.
+4. Adding a check to the predict_future_price function to handle cases where the API response does not contain the expected currency data.
+5. Adding a call to np.savetxt to save the best weights to a file when they are updated.
+6. Adding calls to rsis.append(rsi) and prices.append(future_price) to update the lists of prices and RSI values at the end of each iteration.
+7. Adding a loop over the iterations and a call to time.sleep to wait between API requests.
+8. Fixing the incomplete generate_new_population function to generate new child sets of weights with mutations applied to one of the parents.
+
 ## Credits
 
 This program was written by dad84 and is licensed under the [MIT License](https://opensource.org/licenses/MIT).

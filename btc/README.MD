@@ -13,7 +13,7 @@ Before running the script, you need to install the required libraries. You can d
 
 To use the script, simply run it using Python:
 
-`btcag.py`
+`BTCag.py`
 
 
 The script will start running and will output the current market data and predicted future price every 30 seconds. It will also update the best fitness and weights based on the fitness of the current population.
